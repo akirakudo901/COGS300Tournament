@@ -59,6 +59,9 @@ sysinfo.txt
 crashlytics-build.properties
 
 # Added by AKIRA:
-/.vscode #settings for vscode
-/results #results from training using ml-agents
-/config #configurations used to run ml-agents
+#settings for vscode
+.vscode
+#configurations used to run ml-agents 
+config 
+#results from training using ml-agents
+results 
