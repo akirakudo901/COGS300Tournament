@@ -1175,7 +1175,7 @@ GameObject:
   - component: {fileID: 3839175410281008577}
   - component: {fileID: 4471396200462634849}
   m_Layer: 0
-  m_Name: Training Area
+  m_Name: OldScript Training Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

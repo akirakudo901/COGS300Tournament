@@ -63,8 +63,6 @@ public class CogsAgent : Agent
         targets = GameObject.FindGameObjectsWithTag("Target");
 
         timer = GameObject.FindGameObjectWithTag("Timer");
-        
-        
 
         myLaser = transform.Find("Laser").gameObject;
     }

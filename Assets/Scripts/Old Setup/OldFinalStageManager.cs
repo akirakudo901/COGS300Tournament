@@ -1,13 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq; // TODO RECONSIDER; ADDED FOR FILTERING FUNCTIONALITY
 using UnityEngine;
 using UnityEngine.UI;
 
 
-// THIS IS THE COPY VERSION I TWEAK AROUND!!!
-
-public class FinalStageManager : MonoBehaviour
+public class OldFinalStageManager : MonoBehaviour
 {
     // Start is called before the first frame update
     public bool isTraining = false;
@@ -28,8 +25,7 @@ public class FinalStageManager : MonoBehaviour
     CogsAgent agent1Script, agent2Script;
 
     void Awake() {
-        // HAVE TO SPECIFICALLY CHECK FOR PLAYER OBJECTS WITHIN THIS TRANSFORM
-        if (GameObject.FindGameObjectsWithTag("Player").Where(p => p.transform.parent == transform).Length == 0) {
+        if (GameObject.FindGameObjectsWithTag("Player").Length == 0) {
             agent1 = Resources.Load<GameObject>(WorldConstants.agent1ID + "/" + WorldConstants.agent1ID);
             agent2 = Resources.Load<GameObject>(WorldConstants.agent2ID + "/" + WorldConstants.agent2ID);
             agent1 = Instantiate(agent1);
@@ -39,8 +35,8 @@ public class FinalStageManager : MonoBehaviour
             agent2.name = "Agent 2";
         }
         else {
-            players = GameObject.FindGameObjectsWithTag("Player").Where(p => p.transform.parent == transform).ToArray();
-            agent1 = playrs[0]
+            players = GameObject.FindGameObjectsWithTag("Player"); 
+            agent1 = players[0];
             agent2 = players[1];
 
             agent1.name = "Agent 1";
@@ -50,11 +46,7 @@ public class FinalStageManager : MonoBehaviour
     
     void Start()
     {
-        // have to specifically link targets objects to this field, and no other
         targets = GameObject.FindGameObjectsWithTag("Target");
-        // filters the targets based on their parent's parent (should be a specific field)
-        GameObject[] targetsInThisField = targets.Where(t => t.transform.parent.parent == transform).ToArray();
-        targets = targetsInThisField;
 
         agent1.transform.SetParent(transform);
         agent2.transform.SetParent(transform);

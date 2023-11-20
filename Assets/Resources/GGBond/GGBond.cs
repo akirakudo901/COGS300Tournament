@@ -77,7 +77,6 @@ public class GGBond : CogsAgent
         discreteActionsOut[1] = 0; //....................1
         discreteActionsOut[2] = 0; //....................2
         discreteActionsOut[3] = 0; //....................3
-
         discreteActionsOut[4] = 0;
 
         if (Input.GetKey(KeyCode.UpArrow))
