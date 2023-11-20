@@ -71,7 +71,9 @@ public class FinalStageManager : MonoBehaviour
         
         winnerTextbox.enabled = false;
         agent1Script = agent1.GetComponent(WorldConstants.agent1ID) as CogsAgent;
+        Debug.Log(agent1Script);
         agent2Script = agent2.GetComponent(WorldConstants.agent2ID) as CogsAgent;
+         Debug.Log(agent2Script);
     }
 
 
