@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq; // TODO RECONSIDER; ADDED FOR WHERE FUNCTIONALITY
 using UnityEngine;
 
 public class Target : MonoBehaviour
@@ -16,6 +17,7 @@ public class Target : MonoBehaviour
 
     private int spotInBase;
     Rigidbody rb;
+    private Transform parentStageTransform; //Added to store the parent stage object this belongs to
 
 
 
@@ -25,8 +27,11 @@ public class Target : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         SetMass(0);
         startingCo = new Vector3(transform.localPosition.x, transform.localPosition.y, transform.localPosition.z);
-        players = GameObject.FindGameObjectsWithTag("Player");
-        bases = GameObject.FindGameObjectsWithTag("HomeBase");
+        parentStageTransform = transform.parent.parent;// Addded
+        players = GameObject.FindGameObjectsWithTag("Player").Where(p => p.transform.parent == parentStageTransform).ToArray(); //Modified
+        // ORIGINAL players = GameObject.FindGameObjectsWithTag("Player");
+        bases = GameObject.FindGameObjectsWithTag("HomeBase").Where(h => h.transform.parent == parentStageTransform).ToArray(); //Modified
+        // ORIGINAL bases = GameObject.FindGameObjectsWithTag("HomeBase");
         base1co = bases[0].transform.localPosition;
         base2co = bases[1].transform.localPosition;
     }

@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System; // ADDED FOR ARRAY.FIND FUNCTIONALITY
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq; // TODO RECONSIDER; ADDED FOR WHERE FUNCTIONALITY
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
@@ -51,7 +53,7 @@ public class CogsAgent : Agent
     // in your own agent script
     protected Dictionary<string, float> rewardDict;
 
-
+    private Transform parentStageTransform; // Added to track the parent stage object
 
     // ---------------MONOBEHAVIOR FUNCTIONS------------------
     // Functions called at the beginning and update functions
@@ -60,7 +62,8 @@ public class CogsAgent : Agent
     protected void Awake()
     {
         rBody = GetComponent<Rigidbody>();
-        targets = GameObject.FindGameObjectsWithTag("Target");
+        targets = null;
+        // Removed - moved into start since parentStageTransform only is instantiated when this starts targets = GameObject.FindGameObjectsWithTag("Target");
 
         timer = GameObject.FindGameObjectWithTag("Timer");
 
@@ -68,7 +71,11 @@ public class CogsAgent : Agent
     }
 
     protected virtual void Start() {
-        GameObject[] agents = GameObject.FindGameObjectsWithTag("Player");
+        parentStageTransform = transform.parent; // Addded
+        targets = GameObject.FindGameObjectsWithTag("Target").Where(t => t.transform.parent.parent == parentStageTransform).ToArray(); //Modified - moved from above
+        
+        GameObject[] agents = GameObject.FindGameObjectsWithTag("Player").Where(p => p.transform.parent == parentStageTransform).ToArray(); //Modified
+        // ORIGINAL GameObject[] agents = GameObject.FindGameObjectsWithTag("Player");
         foreach (GameObject agent in agents) {
             if (agent != gameObject) {
                 enemy = agent;
@@ -78,7 +85,11 @@ public class CogsAgent : Agent
             team = 1;
         }
         else team = 2;
-        myBase = GameObject.Find("Base " + team);
+        myBase = Array.Find(
+            GameObject.FindGameObjectsWithTag("HomeBase").Where(b => b.transform.parent == parentStageTransform).ToArray(), 
+            b => b.name == "Base " + team
+            ); // Modified
+        // ORIGINAL myBase = GameObject.Find("Base " + team);
         baseLocation = myBase.transform;
 
         dirToGo = Vector3.zero;

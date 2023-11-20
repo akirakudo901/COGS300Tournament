@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System; // ADDED TO ADD THE ARRAY FIND FUNCTIONALITY
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq; // TODO RECONSIDER; ADDED FOR WHERE FUNCTIONALITY
 using UnityEngine;
 
 public class HomeBase : MonoBehaviour
@@ -13,10 +15,18 @@ public class HomeBase : MonoBehaviour
     private List<bool> openSpots = new List<bool>();
     private List<GameObject> capturedTargets;
     private GameObject[] players;
+    private Transform parentStageTransform; // Added a parentStage object to refer to the stage this belongs to
 
     void Start()
     {
-        player = GameObject.Find("Agent " + team);
+        
+        parentStageTransform = transform.parent; // Addded
+        player = Array.Find(
+            GameObject.FindGameObjectsWithTag("Player").Where(p => p.transform.parent == parentStageTransform).ToArray(), 
+            p => p.name == "Agent " + team
+            ); // Modified
+        
+        // ORIGINAL player = GameObject.Find("Agent " + team);
 
         for (int i = 0; i < 9; i++){
             openSpots.Add(true);

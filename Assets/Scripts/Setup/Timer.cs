@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class Timer : MonoBehaviour
 {
-    public const float timeLimit = 120;
+    public const float timeLimit = 10;
     private float timeRemaining;
     private bool timerIsRunning = true;
     private Text timerTextUI;

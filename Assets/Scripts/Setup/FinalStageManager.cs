@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq; // TODO RECONSIDER; ADDED FOR FILTERING FUNCTIONALITY
+using System.Linq; // TODO RECONSIDER; ADDED FOR WHERE FUNCTIONALITY
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,21 +26,26 @@ public class FinalStageManager : MonoBehaviour
     GameObject[] players;
 
     CogsAgent agent1Script, agent2Script;
+    private bool isReset = false; //Added to control resetting of multiple stages
 
     void Awake() {
         // HAVE TO SPECIFICALLY CHECK FOR PLAYER OBJECTS WITHIN THIS TRANSFORM
-        if (GameObject.FindGameObjectsWithTag("Player").Where(p => p.transform.parent == transform).Length == 0) {
+        if (GameObject.FindGameObjectsWithTag("Player").Where(p => p.transform.parent == transform).ToArray().Length == 0) { //Modified
+        // ORIGINAL if (GameObject.FindGameObjectsWithTag("Player").Length == 0) {
             agent1 = Resources.Load<GameObject>(WorldConstants.agent1ID + "/" + WorldConstants.agent1ID);
             agent2 = Resources.Load<GameObject>(WorldConstants.agent2ID + "/" + WorldConstants.agent2ID);
             agent1 = Instantiate(agent1);
             agent2 = Instantiate(agent2);
+
+            players = GameObject.FindGameObjectsWithTag("Player").Where(p => p.transform.parent == transform).ToArray(); // Added 
             
             agent1.name = "Agent 1";
             agent2.name = "Agent 2";
         }
         else {
-            players = GameObject.FindGameObjectsWithTag("Player").Where(p => p.transform.parent == transform).ToArray();
-            agent1 = playrs[0]
+            players = GameObject.FindGameObjectsWithTag("Player").Where(p => p.transform.parent == transform).ToArray();//Modified
+            // ORIGINAL players = GameObject.FindGameObjectsWithTag("Player"); 
+            agent1 = players[0];
             agent2 = players[1];
 
             agent1.name = "Agent 1";
@@ -51,10 +56,9 @@ public class FinalStageManager : MonoBehaviour
     void Start()
     {
         // have to specifically link targets objects to this field, and no other
-        targets = GameObject.FindGameObjectsWithTag("Target");
         // filters the targets based on their parent's parent (should be a specific field)
-        GameObject[] targetsInThisField = targets.Where(t => t.transform.parent.parent == transform).ToArray();
-        targets = targetsInThisField;
+        targets = GameObject.FindGameObjectsWithTag("Target").Where(t => t.transform.parent.parent == transform).ToArray();//Modified
+        // ORIGINAL targets = GameObject.FindGameObjectsWithTag("Target");
 
         agent1.transform.SetParent(transform);
         agent2.transform.SetParent(transform);
@@ -161,7 +165,8 @@ public class FinalStageManager : MonoBehaviour
     }
 
     void Reset() {
-        timer.GetComponent<Timer>().Reset();
+
+        // ORIGINAL timer.GetComponent<Timer>().Reset();
         base1.GetComponent<HomeBase>().Reset();
         base2.GetComponent<HomeBase>().Reset();
         foreach (GameObject target in targets)
@@ -171,9 +176,36 @@ public class FinalStageManager : MonoBehaviour
         
         agent1Script.EndEpisode();
         agent2Script.EndEpisode();
+
+        
+        // Added START
+        setReset(true);
+        bool allOtherStagesAreReset = true;
+        foreach (GameObject stageManager in GameObject.FindGameObjectsWithTag("TrainingArea"))
+        {
+            allOtherStagesAreReset = allOtherStagesAreReset && stageManager.GetComponent<FinalStageManager>().hasBeenReset();
+        }
+
+        if (allOtherStagesAreReset) {
+            foreach (GameObject stageManager in GameObject.FindGameObjectsWithTag("TrainingArea"))
+            {
+                stageManager.GetComponent<FinalStageManager>().setReset(false);
+            }
+            timer.GetComponent<Timer>().Reset();
+        }
+        winnerTextbox.enabled = false;
+        // Added END
+        
     }
 
     void StopGame() {
         Time.timeScale = 0;
     }
+
+    //ADDED START
+    // Added Getters & Setters
+    public bool hasBeenReset() { return isReset; }
+    void setReset(bool isReset) { this.isReset = isReset; }
+    // ADDED END
+
 }

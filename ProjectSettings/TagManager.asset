@@ -11,6 +11,7 @@ TagManager:
   - HomeBase
   - Laser
   - Timer
+  - TrainingArea
   layers:
   - Default
   - TransparentFX
