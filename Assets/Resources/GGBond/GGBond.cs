@@ -176,17 +176,17 @@ public class GGBond : CogsAgent
      private void AssignBasicRewards() {
         rewardDict = new Dictionary<string, float>();
 
-        rewardDict.Add("frozen", -0.3f);
-        rewardDict.Add("shooting-laser", -0.05f);
-        rewardDict.Add("hit-enemy", 0f);
-        rewardDict.Add("dropped-one-target", 0f); // punishment per target dropped
-        rewardDict.Add("dropped-targets", 0f); // punishment when hit by laser (same to freeze?)
+        rewardDict.Add("frozen", -0.1f); //punishment per tick being frozen
+        rewardDict.Add("shooting-laser", -0.01f); //punishment for the act of shooting lasers (since it might lose you time)
+        rewardDict.Add("hit-enemy", 0.6f); //reward for hitting an enemy with the laser
+        rewardDict.Add("dropped-one-target", -0.1f); // punishment per target dropped when shot by laser
+        rewardDict.Add("dropped-targets", -0.1f); // punishment when hit by laser (same to freeze?)
         // added by AKIRA:
-        rewardDict.Add("carry-one-target-back-to-base", 0.5f);
-        rewardDict.Add("pick-up-target", 0.25f);
-        rewardDict.Add("bump-into-wall", -0.1f);
-        rewardDict.Add("enemy-stole-one-target", -0.5f);
-        rewardDict.Add("bonus-stealing-from-enemy", 0.25f);
+        rewardDict.Add("carry-one-target-back-to-base", 0.5f); // reward per target brought back to base
+        rewardDict.Add("pick-up-target", 0.25f); // reward when picking up a target
+        rewardDict.Add("bump-into-wall", -0.1f); // punishment for bumping into walls
+        rewardDict.Add("enemy-stole-one-target", -0.5f); // punishment when the enemy steals a target from your base
+        rewardDict.Add("bonus-stealing-from-enemy", 0.25f); // bonus for picking up a target in the enemy base
     }
 
     private void checkStateOfTargetsInBase() {
