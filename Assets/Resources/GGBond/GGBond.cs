@@ -10,7 +10,7 @@ public class GGBond : CogsAgent
     // tracks the number of objects in home base in 
     // order to add the correct reward when the player
     // drops targets in the home base
-    private int latestNumTargetInHomeBase = 0; 
+    private int latestNumTargetInHomeBase = 0;
 
     // ------------------BASIC MONOBEHAVIOR FUNCTIONS-------------------
     
@@ -67,6 +67,10 @@ public class GGBond : CogsAgent
         
         // Whether the agent is frozen
         sensor.AddObservation(IsFrozen());
+
+        // ADDED BY AKIRA: The exact position of the enemy
+        sensor.AddObservation(enemy.transform.localPosition);
+        
     }
 
     // For manual override of controls. This function will use keyboard presses to simulate output from your NN 
@@ -175,18 +179,22 @@ public class GGBond : CogsAgent
     //  --------------------------HELPERS---------------------------- 
      private void AssignBasicRewards() {
         rewardDict = new Dictionary<string, float>();
+        
+        float rewardHittingWithLaser = 0.005f;
+        float targetPickUp = 0.0075f;
+        float stealingBonus = 0.0075f;
 
-        rewardDict.Add("frozen", -0.1f); //punishment per tick being frozen
-        rewardDict.Add("shooting-laser", -0.01f); //punishment for the act of shooting lasers (since it might lose you time)
-        rewardDict.Add("hit-enemy", 0.6f); //reward for hitting an enemy with the laser
-        rewardDict.Add("dropped-one-target", -0.1f); // punishment per target dropped when shot by laser
-        rewardDict.Add("dropped-targets", -0.1f); // punishment when hit by laser (same to freeze?)
+        rewardDict.Add("hit-enemy", rewardHittingWithLaser); //reward for hitting an enemy with the laser
+        rewardDict.Add("frozen",   -rewardHittingWithLaser); //punishment per tick being frozen
+        rewardDict.Add("shooting-laser", -0.001f); //punishment for the act of shooting lasers (since it might lose you time)
+        rewardDict.Add("dropped-one-target", -rewardHittingWithLaser); // punishment per target dropped when shot by laser
+        // rewardDict.Add("dropped-targets", 0f); // punishment when hit by laser (same to freeze?)
         // added by AKIRA:
-        rewardDict.Add("carry-one-target-back-to-base", 0.5f); // reward per target brought back to base
-        rewardDict.Add("pick-up-target", 0.25f); // reward when picking up a target
-        rewardDict.Add("bump-into-wall", -0.1f); // punishment for bumping into walls
-        rewardDict.Add("enemy-stole-one-target", -0.5f); // punishment when the enemy steals a target from your base
-        rewardDict.Add("bonus-stealing-from-enemy", 0.25f); // bonus for picking up a target in the enemy base
+        rewardDict.Add("carry-one-target-back-to-base", 0.01f); // reward per target brought back to base
+        rewardDict.Add("pick-up-target", targetPickUp); // reward when picking up a target
+        rewardDict.Add("bump-into-wall", -0.005f); // punishment for bumping into walls
+        rewardDict.Add("enemy-stole-one-target", -(stealingBonus + targetPickUp)); // punishment when the enemy steals a target from your base
+        rewardDict.Add("bonus-stealing-from-enemy", stealingBonus); // bonus for picking up a target in the enemy base
     }
 
     private void checkStateOfTargetsInBase() {
