@@ -280,7 +280,7 @@ public class GGBond : CogsAgent
      private void AssignBasicRewards() {
         rewardDict = new Dictionary<string, float>();
         
-        float rewardHittingWithLaser = 0.005f;
+        float rewardHittingWithLaser = 0.0075f;
         float targetPickUp = 0.0075f;
         float stealingBonus = 0.0075f;
 
