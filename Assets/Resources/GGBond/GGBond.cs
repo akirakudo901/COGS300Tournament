@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System; // Added for Abs
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
@@ -11,6 +12,14 @@ public class GGBond : CogsAgent
     // order to add the correct reward when the player
     // drops targets in the home base
     private int latestNumTargetInHomeBase = 0;
+    // tracks the number of targets carried by the enemy
+    // to add bonus when an attack is successful on an
+    // enemy player with more objects
+    private int latestNumTargetCarriedByEnemy = 0;
+    // length of the raycast used to detect walls
+    private const float RAY_DISTANCE = 10f;
+    // length of the laser, as defined with CogsAgent (private so not accessible)
+    private const float LASER_LENGTH = 20f;
 
     // ------------------BASIC MONOBEHAVIOR FUNCTIONS-------------------
     
@@ -20,6 +29,7 @@ public class GGBond : CogsAgent
         base.Start();
         AssignBasicRewards();
         latestNumTargetInHomeBase = 0;
+        latestNumTargetCarriedByEnemy = 0;
     }
 
     // For actual actions in the environment (e.g. movement, shoot laser)
@@ -32,6 +42,10 @@ public class GGBond : CogsAgent
         moveAgent(dirToGo, rotateDir);
         // update the number of targets in the home base
         checkStateOfTargetsInBase();
+        // update the number of targets carried by the enemy
+        checkStateOfEnemyCarrying();
+        // check whether we are showing our back to shape behavior with rewards
+        checkIfShowingBackToEnemy();
     }
 
 
@@ -41,35 +55,129 @@ public class GGBond : CogsAgent
     // Get relevant information from the environment to effectively learn behavior
     public override void CollectObservations(VectorSensor sensor)
     {
-        // Agent velocity in x and z axis 
+        // gets angle & distance to the given game object with respect to this object
+        (float yAngle, float distance) getAngleAndDistance(GameObject go) {
+            return (
+                GetYAngle(go), //angle
+                Vector3.Distance(transform.localPosition, go.transform.localPosition) //distance
+                );
+        }
+
+        // CODE TAKEN FROM lab2-self-driving IN CarControlAPI.cs! THANKS!
+        //Takes in an angle as degrees, where 0 is the front and 180,-180 are the back.
+        //Returns a bool indicating whether there was an object within RAY_DISTANCE in the yAngleOffset direction.
+        bool Raycast(float yAngleOffset)
+        {
+            var direction = Quaternion.Euler(0, yAngleOffset, 0) * transform.forward;
+            var position = new Vector3(transform.position.x, transform.position.y + 0.5f, transform.position.z);
+
+            RaycastHit hit;
+            // Does the ray intersect any objects excluding the player layer
+            if (Physics.Raycast(position, direction, out hit, RAY_DISTANCE, 1, QueryTriggerInteraction.Ignore))
+            {
+                // Debug.DrawRay(position, direction * hit.distance, Color.yellow);
+                return (hit.transform.tag == "Wall");
+            }
+            else
+            {
+                // Debug.DrawRay(position, direction * 50, Color.red);
+                return false;
+            }
+        }
+
+        // Agent velocity in x and z axis relative to the agent's forward
         var localVelocity = transform.InverseTransformDirection(rBody.velocity);
         sensor.AddObservation(localVelocity.x);
         sensor.AddObservation(localVelocity.z);
-
+        
         // Time remaning
         sensor.AddObservation(timer.GetComponent<Timer>().GetTimeRemaning());  
 
         // Agent's current rotation
         var localRotation = transform.rotation;
-        sensor.AddObservation(transform.rotation.y);
+        sensor.AddObservation(localRotation.y);
 
-        // Agent and home base's position
-        sensor.AddObservation(this.transform.localPosition);
-        sensor.AddObservation(baseLocation.localPosition);
-
-        // for each target in the environment, add: its position, whether it is being carried,
-        // and whether it is in a base
+        // REMOVED AGENT'S ABSOLUTE POSITION!
+        // Home base's position relative to agent
+        var baseLocation = getAngleAndDistance(myBase);
+        sensor.AddObservation(baseLocation.yAngle);
+        sensor.AddObservation(baseLocation.distance);
+    
+        // for each target in the environment, add: its position realtive to the player, 
+        // whether it is being carried by any team, and whether it is in a base of any team
         foreach (GameObject target in targets){
-            sensor.AddObservation(target.transform.localPosition);
-            sensor.AddObservation(target.GetComponent<Target>().GetCarried());
-            sensor.AddObservation(target.GetComponent<Target>().GetInBase());
+            var targetLocation = getAngleAndDistance(target);
+            sensor.AddObservation(targetLocation.yAngle);
+            sensor.AddObservation(targetLocation.distance);
+            sensor.AddObservation(target.GetComponent<Target>().GetCarried()); //indicates the team as int
+            sensor.AddObservation(target.GetComponent<Target>().GetInBase()); //indicates the team as int
         }
         
         // Whether the agent is frozen
         sensor.AddObservation(IsFrozen());
 
-        // ADDED BY AKIRA: The exact position of the enemy
-        sensor.AddObservation(enemy.transform.localPosition);
+        // ADDED BY AKIRA: The position of the enemy relative to the player 
+        // as well as its front direction, x, z speed, 
+        // whether it is frozen and whether it is shooting anything
+        // front direction
+        var enemyLocalForward = transform.InverseTransformDirection(enemy.transform.forward);
+        sensor.AddObservation(enemyLocalForward.x);
+        sensor.AddObservation(enemyLocalForward.z);
+        // enemy position
+        var enemyLocation = getAngleAndDistance(enemy);
+        sensor.AddObservation(enemyLocation.yAngle);
+        sensor.AddObservation(enemyLocation.distance);
+        // enemy speed and angle
+        var enemyLocalVelocity = transform.InverseTransformDirection(enemy.GetComponent<Rigidbody>().velocity);
+        sensor.AddObservation(enemyLocalVelocity.x); //x movement relative to this agent
+        sensor.AddObservation(enemyLocalVelocity.z); //z movement relative to this agent
+        // is the enemy frozen?
+        sensor.AddObservation(enemy.GetComponent<CogsAgent>().IsFrozen());
+        // is the enemy shooting and not frozen (a threat)?
+        sensor.AddObservation(enemy.GetComponent<CogsAgent>().IsLaserOn() && !enemy.GetComponent<CogsAgent>().IsFrozen());
+
+        // Raycast to check if there is a wall in any of the eight directions
+        // around the player
+        sensor.AddObservation(Raycast(0));
+        sensor.AddObservation(Raycast(45));
+        sensor.AddObservation(Raycast(90));
+        sensor.AddObservation(Raycast(135));
+        sensor.AddObservation(Raycast(180));
+        sensor.AddObservation(Raycast(-135));
+        sensor.AddObservation(Raycast(-90));
+        sensor.AddObservation(Raycast(-45));
+        
+        // ORIGINAL: BEFORE MAKING MOVEMENTS RELATIVE TO THE PLAYER
+        // // Agent velocity in x and z axis relative to the agent's forward
+        // var localVelocity = transform.InverseTransformDirection(rBody.velocity);
+        // sensor.AddObservation(localVelocity.x);
+        // sensor.AddObservation(localVelocity.z);
+
+        // // Time remaning
+        // sensor.AddObservation(timer.GetComponent<Timer>().GetTimeRemaning());  
+
+        // // Agent's current rotation
+        // var localRotation = transform.rotation;
+        // sensor.AddObservation(transform.rotation.y);
+
+        // // Agent and home base's position
+        // sensor.AddObservation(this.transform.localPosition);
+        // sensor.AddObservation(baseLocation.localPosition);
+
+        // // for each target in the environment, add: its position, whether it is being carried,
+        // // and whether it is in a base
+        // foreach (GameObject target in targets){
+        //     sensor.AddObservation(target.transform.localPosition);
+        //     sensor.AddObservation(target.GetComponent<Target>().GetCarried());
+        //     sensor.AddObservation(target.GetComponent<Target>().GetInBase());
+        // }
+        
+        // // Whether the agent is frozen
+        // sensor.AddObservation(IsFrozen());
+
+        // // ADDED BY AKIRA: The exact position of the enemy
+        // sensor.AddObservation(enemy.transform.localPosition);
+        // ORIGINAL END
         
     }
 
@@ -115,13 +223,10 @@ public class GGBond : CogsAgent
         if (Input.GetKey(KeyCode.B)){
             discreteActionsOut[4] = 1;
         }
-
     }
 
         // What to do when an action is received (i.e. when the Brain gives the agent information about possible actions)
         public override void OnActionReceived(ActionBuffers actions){
-
-        
 
         int forwardAxis = (int)actions.DiscreteActions[0]; //NN output 0
 
@@ -132,9 +237,6 @@ public class GGBond : CogsAgent
         int goToBaseAxis = (int)actions.DiscreteActions[4];
 
         MovePlayer(forwardAxis, rotateAxis, shootAxis, goToTargetAxis, goToBaseAxis);
-
-        
-
     }
 // ----------------------ONTRIGGER AND ONCOLLISION FUNCTIONS------------------------
     // Called when object collides with or trigger (similar to collide but without physics) other objects
@@ -154,8 +256,6 @@ public class GGBond : CogsAgent
 
     protected override void OnCollisionEnter(Collision collision) 
     {
-        
-
         //target is not in my base and is not being carried and I am not frozen
         if (collision.gameObject.CompareTag("Target") && collision.gameObject.GetComponent<Target>().GetInBase() != GetTeam() && collision.gameObject.GetComponent<Target>().GetCarried() == 0 && !IsFrozen())
         {
@@ -186,7 +286,7 @@ public class GGBond : CogsAgent
 
         rewardDict.Add("hit-enemy", rewardHittingWithLaser); //reward for hitting an enemy with the laser
         rewardDict.Add("frozen",   -rewardHittingWithLaser); //punishment per tick being frozen
-        rewardDict.Add("shooting-laser", -0.001f); //punishment for the act of shooting lasers (since it might lose you time)
+        rewardDict.Add("shooting-laser", -0.0001f); //punishment for the act of shooting lasers (since it might lose you time)
         rewardDict.Add("dropped-one-target", -rewardHittingWithLaser); // punishment per target dropped when shot by laser
         // rewardDict.Add("dropped-targets", 0f); // punishment when hit by laser (same to freeze?)
         // added by AKIRA:
@@ -195,6 +295,22 @@ public class GGBond : CogsAgent
         rewardDict.Add("bump-into-wall", -0.005f); // punishment for bumping into walls
         rewardDict.Add("enemy-stole-one-target", -(stealingBonus + targetPickUp)); // punishment when the enemy steals a target from your base
         rewardDict.Add("bonus-stealing-from-enemy", stealingBonus); // bonus for picking up a target in the enemy base
+        //bonus for hitting the enemy and making them drop balls (per target made drop)
+        rewardDict.Add("bonus-per-target-made-drop-when-hitting-the-enemy", rewardHittingWithLaser); 
+
+        // punishment to shape the agent's actions
+        // punish for firing when the enemy is farther than the laser range
+        // punishment is multiplier * (distance to enemy - LASER_LENGTH)
+        rewardDict.Add("shoot-outside-laser-range-punish-multiplier", -0.00001f);
+        // punish for firing when you are not facing the enemy
+        // punishment is multiplier * (abs(angle to enemy) - ANGLE_LEEWAY)
+        rewardDict.Add("shoot-not-toward-enemy-punish-multiplier", -0.000002f);
+        // punish for showing your backside to the enemy while they are facing you
+        // punishment is roughly:
+        // multiplier * (abs(angle to enemy) - LEEWAY1)  <- how much your showing your back
+        //   * (LEEWAY2 - abs(enemy angle to you))       <- how much the enemy faces you
+        //   * (DISTANCE_LEEWAY - distance to enemy)     <- how close the enemy is (closer -> more punish)
+        rewardDict.Add("punishment-showing-back-to-enemy", -0.00000005f);
     }
 
     private void checkStateOfTargetsInBase() {
@@ -214,6 +330,41 @@ public class GGBond : CogsAgent
         }
         // update latestNumTargetInHomeBase
         latestNumTargetInHomeBase = currentNumTargetInHomeBase;
+    }
+
+    private void checkStateOfEnemyCarrying() {
+        int currentNumTargetCarriedByEnemy = enemy.GetComponent<CogsAgent>().GetCarrying();
+
+        // if the number of objects changed
+        if (currentNumTargetCarriedByEnemy != latestNumTargetCarriedByEnemy) { 
+
+            // add reward for hitting the enemy proportional to the number of objects they had
+            if (currentNumTargetCarriedByEnemy == 0 && enemy.GetComponent<CogsAgent>().IsFrozen()) { 
+                AddReward(rewardDict["bonus-per-target-made-drop-when-hitting-the-enemy"] * (latestNumTargetCarriedByEnemy));
+            }
+        }
+        // update latestNumTargetCarriedByEnemy
+        latestNumTargetCarriedByEnemy = currentNumTargetCarriedByEnemy;
+    }
+
+    private void checkIfShowingBackToEnemy() {
+        float ANGLE_LEEWAY_FOR_BACK = 90f;
+        float ANGLE_LEEWAY_FOR_ENEMY_FORWARD = 45f;
+        float DISTANCE_LEEWAY = LASER_LENGTH * 2;
+        // checks if the agent is showing their back to the enemy to punish accordingly
+        Vector3 enemyDir = transform.position - enemy.transform.position;
+        float enemyAngleToThisAgent = Vector3.SignedAngle(enemyDir, enemy.transform.forward, Vector3.up);
+        float distanceToEnemy = Vector3.Distance(transform.localPosition, enemy.transform.localPosition);
+    
+        if (Math.Abs(GetYAngle(enemy)) > ANGLE_LEEWAY_FOR_BACK && 
+        Math.Abs(enemyAngleToThisAgent) < ANGLE_LEEWAY_FOR_ENEMY_FORWARD && 
+        distanceToEnemy < DISTANCE_LEEWAY) {
+            float r = (rewardDict["punishment-showing-back-to-enemy"] * 
+            (Math.Abs(GetYAngle(enemy)) - ANGLE_LEEWAY_FOR_BACK) * 
+            (ANGLE_LEEWAY_FOR_ENEMY_FORWARD - Math.Abs(enemyAngleToThisAgent)) * 
+            (DISTANCE_LEEWAY - distanceToEnemy));
+            AddReward(r);            
+        }
     }
     
     private void MovePlayer(int forwardAxis, int rotateAxis, int shootAxis, int goToTargetAxis, int goToBaseAxis)
@@ -242,7 +393,25 @@ public class GGBond : CogsAgent
         else if (rotateAxis == 2) rotateDir = left;
 
         //shoot
-        if (shootAxis == 1) SetLaser(true);
+        if (shootAxis == 1) {
+            SetLaser(true);
+            // add punishment if we are shooting either when far from the enemy
+            // or when we are facing away from the enemy
+            float ANGLE_LEEWAY = 45f;
+            float distanceToEnemy = Vector3.Distance(transform.localPosition, enemy.transform.localPosition);
+            float angleToEnemy = Math.Abs(GetYAngle(enemy));
+            if (distanceToEnemy > LASER_LENGTH) {
+                AddReward(rewardDict["shoot-outside-laser-range-punish-multiplier"] * (distanceToEnemy - LASER_LENGTH));
+            }
+            if (angleToEnemy > ANGLE_LEEWAY) {
+                AddReward(rewardDict["shoot-not-toward-enemy-punish-multiplier"] * (angleToEnemy - ANGLE_LEEWAY));
+            }            
+        }
+        // HYPOTHETICAL SURGERY TO LET THE AI SHOOT EVERY TIME THE 
+        // ENEMY IS RIGHT IN FRONT OF IT
+        // else if (GetYAngle(enemy) <= 5 
+        // && GetYAngle(enemy) >= -5 
+        // && Vector3.Distance(transform.localPosition, enemy.transform.localPosition) <= LASER_LENGTH) SetLaser(true);
         else SetLaser(false);
 
         //go to the nearest target

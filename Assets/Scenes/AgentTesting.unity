@@ -211,14 +211,19 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4275725191425983408, guid: 621fcfb2087103744b9f8a33ae0b751d,
         type: 3}
+      propertyPath: TeamId
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4275725191425983408, guid: 621fcfb2087103744b9f8a33ae0b751d,
+        type: 3}
       propertyPath: m_Model
       value: 
-      objectReference: {fileID: 5022602860645237092, guid: d339ae1514515d34d8372af60ac5b01b,
+      objectReference: {fileID: 5022602860645237092, guid: 7d62c8bde94b2154d809bfa053e10580,
         type: 3}
     - target: {fileID: 4275725191425983408, guid: 621fcfb2087103744b9f8a33ae0b751d,
         type: 3}
       propertyPath: m_BehaviorType
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4275725191425983412, guid: 621fcfb2087103744b9f8a33ae0b751d,
         type: 3}
@@ -934,12 +939,12 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Model
       value: 
-      objectReference: {fileID: 5022602860645237092, guid: d339ae1514515d34d8372af60ac5b01b,
+      objectReference: {fileID: 5022602860645237092, guid: 7d62c8bde94b2154d809bfa053e10580,
         type: 3}
     - target: {fileID: 4275725191425983408, guid: 621fcfb2087103744b9f8a33ae0b751d,
         type: 3}
       propertyPath: m_BehaviorType
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4275725191425983408, guid: 621fcfb2087103744b9f8a33ae0b751d,
         type: 3}
