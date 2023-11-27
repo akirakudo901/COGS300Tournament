@@ -26,7 +26,6 @@ public class FinalStageManager : MonoBehaviour
     GameObject[] players;
 
     CogsAgent agent1Script, agent2Script;
-    private bool isReset = false; //Added to control resetting of multiple stages
 
     void Awake() {
         // HAVE TO SPECIFICALLY CHECK FOR PLAYER OBJECTS WITHIN THIS TRANSFORM
@@ -82,18 +81,67 @@ public class FinalStageManager : MonoBehaviour
 
         int base1Num = base1.GetComponent<HomeBase>().GetCaptured();
         int base2Num = base2.GetComponent<HomeBase>().GetCaptured();
+        
+        base1CountTxt.text = "[A1] " + WorldConstants.agent1ID + ": " + base1Num.ToString();
+        base2CountTxt.text = "[A2] " + WorldConstants.agent2ID + ": " + base2Num.ToString();
+     
+        if (!timerIsRunning)
+        {
+            if (isTraining) {
+                // MODIFIED START
+                FinalStageManager fsm;
+                foreach (GameObject stageManager in GameObject.FindGameObjectsWithTag("TrainingArea"))
+                {
+                    fsm = stageManager.GetComponent<FinalStageManager>();
+                    fsm.DetermineGameResult();
+                    fsm.Reset();
+                }
+                timer.GetComponent<Timer>().Reset();
+                winnerTextbox.enabled = false;
+                // MODIFIED END
+            }
+            else {
+                // MODIFIED START
+                FinalStageManager fsm;
+                foreach (GameObject stageManager in GameObject.FindGameObjectsWithTag("TrainingArea"))
+                {
+                    fsm = stageManager.GetComponent<FinalStageManager>();
+                    fsm.DetermineGameResult();
+                }
+                // MODIFIED END
+                StopGame();
+            }
+            
+        }
+    }
+
+    public void Reset() {
+
+        // ORIGINAL timer.GetComponent<Timer>().Reset();
+        base1.GetComponent<HomeBase>().Reset();
+        base2.GetComponent<HomeBase>().Reset();
+        foreach (GameObject target in targets)
+        {
+            target.GetComponent<Target>().ResetGame();
+        }
+        
+        agent1Script.EndEpisode();
+        agent2Script.EndEpisode();
+        
+    }
+
+    // ADDED START
+    public void DetermineGameResult() {
+        int base1Num = base1.GetComponent<HomeBase>().GetCaptured();
+        int base2Num = base2.GetComponent<HomeBase>().GetCaptured();
+        
         int agent1Carry = agent1Script.GetCarrying();
         int agent2Carry = agent2Script.GetCarrying();
 
         float agent1BaseDist = agent1Script.DistanceToBase();
         float agent2BaseDist = agent2Script.DistanceToBase();
 
-        base1CountTxt.text = "[A1] " + WorldConstants.agent1ID + ": " + base1Num.ToString();
-        base2CountTxt.text = "[A2] " + WorldConstants.agent2ID + ": " + base2Num.ToString();
-     
-        if (!timerIsRunning)
-        {
-            if (base1Num > base2Num)
+        if (base1Num > base2Num)
             {
                 agent1Script.SetReward(1f);
                 agent2Script.SetReward(-1f);
@@ -154,58 +202,11 @@ public class FinalStageManager : MonoBehaviour
                 winnerTextbox.text = "Draw";
             }
 
-            if (isTraining) {
-                Reset();
-            }
-            else {
-                StopGame();
-            }
-            
-        }
     }
-
-    void Reset() {
-
-        // ORIGINAL timer.GetComponent<Timer>().Reset();
-        base1.GetComponent<HomeBase>().Reset();
-        base2.GetComponent<HomeBase>().Reset();
-        foreach (GameObject target in targets)
-        {
-            target.GetComponent<Target>().ResetGame();
-        }
-        
-        agent1Script.EndEpisode();
-        agent2Script.EndEpisode();
-
-        
-        // Added START
-        setReset(true);
-        bool allOtherStagesAreReset = true;
-        foreach (GameObject stageManager in GameObject.FindGameObjectsWithTag("TrainingArea"))
-        {
-            allOtherStagesAreReset = allOtherStagesAreReset && stageManager.GetComponent<FinalStageManager>().hasBeenReset();
-        }
-
-        if (allOtherStagesAreReset) {
-            foreach (GameObject stageManager in GameObject.FindGameObjectsWithTag("TrainingArea"))
-            {
-                stageManager.GetComponent<FinalStageManager>().setReset(false);
-            }
-            timer.GetComponent<Timer>().Reset();
-        }
-        winnerTextbox.enabled = false;
-        // Added END
-        
-    }
+    // ADDED END
 
     void StopGame() {
         Time.timeScale = 0;
     }
-
-    //ADDED START
-    // Added Getters & Setters
-    public bool hasBeenReset() { return isReset; }
-    void setReset(bool isReset) { this.isReset = isReset; }
-    // ADDED END
 
 }
