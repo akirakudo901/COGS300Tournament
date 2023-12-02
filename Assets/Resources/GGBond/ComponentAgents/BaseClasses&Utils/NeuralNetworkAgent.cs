@@ -9,6 +9,7 @@ using Unity.MLAgents.Sensors;
 
 // my own code
 using CopiedCode;
+using GGBondUtilities;
 
 // This file implements the "NeuralNetworkAgent" class which forms the basis of any agent that uses neural networks
 public partial class GGBond
@@ -19,41 +20,27 @@ public partial class GGBond
 
         new public const string name = "NEURAL_NETWORK_AGENT";
         
-        private CopiedActionSpec m_actSpec = CopiedActionSpec.MakeDiscrete(3, 3, 2, 2, 2);
         // action spec for the agent - globally be 5 branch Discrete, (3, 3, 2, 2, 2)
         // identical to what specified in BehaviorParameters Component in editor
         public CopiedActionSpec ActSpec {
-            get {return m_actSpec;}
-            internal set {m_actSpec = value;}
+            get {return CopiedActionSpec.MakeDiscrete(3, 3, 2, 2, 2);}
         }
 
-        private CopiedBarracudaPolicy m_policy;
         // an internal CopiedBaraccudaPolicy object to get actions from the network
-        public CopiedBarracudaPolicy Policy {
-            get {return m_policy;}
-            internal set {m_policy = value;}
-        }
+        public CopiedBarracudaPolicy Policy { get; internal set; }
 
-                private NNModel m_model;
+        private NNModel m_model;
         // model to be loaded to BehaviorParameters
         public NNModel Model {
             get {return m_model;}
             internal set {m_model = value; UpdatePolicy();}
         }
 
-        private int m_obsStackSize;
         // the number of vector observations to stack - to be readjusted for every inheriting agent
-        public int NumStackedVectorObservations {
-            get {return m_obsStackSize;}
-            set {m_obsStackSize = value;}
-        }
+        public int NumStackedVectorObservations { get; set; }
 
-        private int m_vectorObsSize;
         // the size of vector observation - to be readjusted for every inheriting agent
-        public int VectorObservationSize {
-            get {return m_vectorObsSize;}
-            set {m_vectorObsSize = value;}
-        } 
+        public int VectorObservationSize { get; set; } 
 
         // sensors used to generate observations for this agent mode
         public List<CopiedISensor> NNAgentSensors;
@@ -62,11 +49,13 @@ public partial class GGBond
         // agent info stored - really there just to make the remaining code work
         private CopiedAgentInfo m_info;
         // whether a decision has been requested
-        private bool m_decisionRequested;
+        private bool m_decisionRequested = false;
         // whether an action has been requested
-        private bool m_actionRequested;
+        private bool m_actionRequested = false;
         // the action from the immediate previous time
         private ActionBuffers m_previousAction;
+        // whether there is a NNAgentDecisionRequester object assigned to the GGBond instance
+        private bool m_nnAgentDecisionRequesterAttached;
 
         
         // constructor to be specified to instantiate an example of this class
@@ -75,6 +64,8 @@ public partial class GGBond
             UpdatePolicy();
             this.m_info = new CopiedAgentInfo();
             this.m_info.episodeId = 99; //should not matter whatever number we put here
+            // if there is an NNAgentDecisionRequester attached to instance, remember as so
+            m_nnAgentDecisionRequesterAttached = (instance.GetComponent<NNAgentDecisionRequester>() != null);
         }
 
         // request a decision - essentially meaning that in the next ComponentAgentHeuristic call,
@@ -99,10 +90,11 @@ public partial class GGBond
         //------------------OVERRIDEN FUNCTIONS---------------
         // Obtain observations from the environment to be passed to the policy, and
         // determine appropriate actions
+        // we can switch between using NNAgentDecisionRequester and not
         public override void ComponentAgentHeuristic(in ActionBuffers actionsOut) 
         {
             // if any decision were requested recently
-            if (m_decisionRequested) 
+            if (!m_nnAgentDecisionRequesterAttached || m_decisionRequested) 
             {
                 // set m_decisionRequested to false
                 m_decisionRequested = false;
@@ -110,6 +102,7 @@ public partial class GGBond
                 // collect the observation
                 UpdateSensors(); //first call UpdateSensors, as it will clear the content of NNVectorSensor
                 GetObservations(NNVectorSensor);
+
                 // request a decision (let the model runner know that this agent needs a decision)
                 Policy.RequestDecision(m_info, NNAgentSensors);
                 // get the action
@@ -119,7 +112,7 @@ public partial class GGBond
             var discreteActionsOut = actionsOut.DiscreteActions;
             
             // if any action were requested recently 
-            if (m_actionRequested) 
+            if (!m_nnAgentDecisionRequesterAttached || m_actionRequested) 
             {
                 // set m_actionRequested to false
                 m_actionRequested = false;
@@ -172,6 +165,7 @@ public partial class GGBond
             ThreeDRay.EndVerticalOffset = 0f;
 
             CopiedISensor[] ThreeDSensors = ThreeDRay.CreateSensors();
+            NNAgentSensors.Capacity += 1;
             NNAgentSensors.AddRange(ThreeDSensors);
             ggbond.allSensorsAdditionallyAllocated.AddRange(ThreeDSensors);
             

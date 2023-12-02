@@ -135,6 +135,9 @@ public partial class GGBond : CogsAgent
     // request an action (call the RequestAction function) to the current agent mode
     // if it is a NeuralNetworkAgent
     public void RequestActionToNNAgent() {
+        // only valid when BehaviorType is HeuristicOnly
+        if (GetComponent<BehaviorParameters>().BehaviorType != BehaviorType.HeuristicOnly) return;
+
         ComponentAgent currentAgentMode = allAgentModes.Find(x => x.GetName() == agentMode);
         if (currentAgentMode is NeuralNetworkAgent) {
             NeuralNetworkAgent nnAgent = (NeuralNetworkAgent) currentAgentMode;
@@ -145,6 +148,9 @@ public partial class GGBond : CogsAgent
     // request a decision (call the RequestDecision function) to the current agent mode
     // if it is a NeuralNetworkAgent
     public void RequestDecisionToNNAgent() {
+        // only valid when BehaviorType is HeuristicOnly
+        if (GetComponent<BehaviorParameters>().BehaviorType != BehaviorType.HeuristicOnly) return;
+
         ComponentAgent currentAgentMode = allAgentModes.Find(x => x.GetName() == agentMode);
         if (currentAgentMode is NeuralNetworkAgent) {
             NeuralNetworkAgent nnAgent = (NeuralNetworkAgent) currentAgentMode;

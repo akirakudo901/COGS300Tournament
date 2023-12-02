@@ -97,7 +97,7 @@ namespace CopiedCode
         }
 
         /// <inheritdoc/>
-        // MY NEW CODE! VERSION USING ORIGINAL ObservationWriter RIGHT BELOW!
+        // MY NEW CODE! VERSION USING ORIGINAL ObservationWriter RIGHT BELOW! CONTENT IS THE SAME.
         public int Write(CopiedObservationWriter writer)
         {
             // First, call the wrapped sensor's write method. Make sure to use our own writer, not the passed one.
