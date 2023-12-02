@@ -14,22 +14,26 @@ public partial class GGBond
         protected GGBond ggbond;
 
         // constructor taking the parent GGBond instance explicitly passed in c#
-        public ComponentAgent(GGBond ggbond) {
+        public ComponentAgent(GGBond ggbond) 
+        {
             this.ggbond = ggbond;
         }
         
         // Initialize values specific for the template agent before simulation starts
-        public virtual void ComponentAgentStart() {
+        public virtual void ComponentAgentStart() 
+        {
             // do something if needed
         }
 
         // Called when OnEnable of GGBond is called
-        public virtual void ComponentAgentOnEnable() {
+        public virtual void ComponentAgentOnEnable() 
+        {
             // do something if needed
         }
 
         // Called when OnDisable of GGBond is called
-        public virtual void ComponentAgentOnDisable() {
+        public virtual void ComponentAgentOnDisable() 
+        {
             // do something if needed
         }
 

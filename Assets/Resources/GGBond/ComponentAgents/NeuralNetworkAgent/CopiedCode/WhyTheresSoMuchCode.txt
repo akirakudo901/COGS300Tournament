@@ -1,0 +1,8 @@
+So the reason why I had to copy all of this was because I was looking at a way
+in which we could instantiate more than 2 neural networks and switch between them.
+
+I figured I could use the already implemented code by MLAgents, but since so many
+of the functions and fields were set to internal and couldn't be accessed, I decided 
+just to copy all the reasoning behind those codes - which took me much longer than I thought.
+
+I swear nothing cheaty is in any of those codes...
