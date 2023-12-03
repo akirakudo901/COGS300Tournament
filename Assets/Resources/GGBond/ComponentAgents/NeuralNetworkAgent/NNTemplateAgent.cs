@@ -9,6 +9,11 @@ using Unity.MLAgents.Actuators;
 using CopiedCode;
 
 // ################# HOW TO MAKE YOUR OWN NEURAL NETWORK AGENT #################
+// !!!!!!!!!!!! IMPORTANT, PLS READ !!!!!!!!!!!
+// DUE TO SOME TECHNICAL DIFFICULTIES, NEURAL NETWORKS LOADED USING THIS CLASS WILL
+// BEHAVE SLIGHTLY DIFFERENTLY FROM HOW THEY DO WHEN RUNNING AGENTS IN INFERENCE MODE.
+// IT DOES NOT SEEM TO BE A SUBTANTIAL DIFFERENCE, AND SHOULD STILL SHOW FLEXIBILITY
+// BUT DOUBLE CHECK IF THE PERFORMANCE DOES NOT SIGNIFIACNTLY DETERIORATE!
 /**
 * This file shows you how to implement an agent acting based on a neural network!
 * I would advise you copy and use this as template!
