@@ -60,7 +60,7 @@ public partial class GGBond : CogsAgent
     [SerializeField]
     private NNModel m_nnTemplateModel;
 
-    public NNModel NNTemplateModel; 
+    public NNModel NNTemplateModel
     {
         get {return m_nnTemplateModel;} // getter method; CHANGE PRIVATE FIELD NAME!
         set { reinitializeNNAgent(m_nnTemplateModel, value); m_nnTemplateModel = value; }  // set method; CHANGE PRIVATE FIELD NAME!
