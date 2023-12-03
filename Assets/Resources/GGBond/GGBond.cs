@@ -27,13 +27,22 @@ using Unity.MLAgents.Sensors;
 
 public partial class GGBond : CogsAgent
 {
+    // model for collector agent
     [SerializeField]
     private NNModel m_collectorModel;
-
     public NNModel CollectorModel 
     {
-        get { return m_collectorModel; }   // get method
+        get {return m_collectorModel;} // getter method
         set { reinitializeNNAgent(m_collectorModel, value); m_collectorModel = value; }  // set method
+    }
+    // model for harasser agent
+    [SerializeField]
+    private NNModel m_harasserModel;
+
+    public NNModel HarasserModel 
+    {
+        get {return m_harasserModel;} // getter method
+        set { reinitializeNNAgent(m_harasserModel, value); m_harasserModel = value; }  // set method
     }
     
     // --------------------AGENT FUNCTIONS-------------------------
@@ -42,24 +51,18 @@ public partial class GGBond : CogsAgent
     // agent takes at any single time. It will specify states which 
     // Heuristic use to take the associated actions.
     public void ActionDeterminingLogic() {
-        // if we want to use keyboard control, don't change the mode
-        if (useKeyboardControl) return;
-
-        string previousAgentMode = agentMode;
-        
-        // FOR DIFFERENT AGENT IMPLEMENTATIONS
-        // e.g. if I wanted to use my "TemplateAgent" agent controls while we have
-        // less than 110 seconds remaining:
-        
-        if ((int) timer.GetComponent<Timer>().GetTimeRemaning() < 120) {
+        // start with COLLECTOR mode
+        // as soon as our score surpasses the enemy's, turn to harass 
+        if (myBase.GetComponent<HomeBase>().GetCaptured() > GetEnemyCaptured())
+        {
+            agentMode = "HARASSER";
+        }
+        else if (timer.GetComponent<Timer>().GetTimeRemaning() < 115)
+        {
             agentMode = "COLLECTOR";
         } else {
+            // this is the default agent mode
             agentMode = "default";
-        }
-
-        // log when a switch in agent mode happens
-        if (agentMode != previousAgentMode) {
-            Debug.Log("Switching from " + previousAgentMode + " to " + agentMode + "!");
         }
     }
 
@@ -73,7 +76,34 @@ public partial class GGBond : CogsAgent
         // and add it into the brackets following the "new List<ComponentAgent>()" part.
         allAgentModes = new List<ComponentAgent>();
         allAgentModes.Add(new TemplateAgent(this));
-        allAgentModes.Add(new Collector(this, m_collectorModel));
+        allAgentModes.Add(new Collector(this, CollectorModel));
+        allAgentModes.Add(new Harasser(this, HarasserModel));
         //###################################################
+    }
+
+    // -------HELPER FUNCTIONS BELOW!-----------
+
+
+
+
+
+
+    
+
+
+
+
+
+
+    // ------------------HELPER USEFUL FOR ACTION DETERMINING LOGIC-----------
+    [HideInInspector]
+    public HomeBase enemyHomeBase;
+    public int GetEnemyCaptured() {
+        if (enemyHomeBase == null) {
+            enemyHomeBase = Array.Find(GameObject.FindGameObjectsWithTag("HomeBase"), 
+            (hb => hb.GetComponent<HomeBase>().team == enemy.GetComponent<CogsAgent>().GetTeam())
+            ).GetComponent<HomeBase>();
+        } 
+        return enemyHomeBase.GetCaptured();
     }
 }

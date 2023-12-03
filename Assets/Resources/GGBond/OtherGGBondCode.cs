@@ -18,10 +18,10 @@ public partial class GGBond : CogsAgent
 {
     // whether to use the keyboard control
     public bool useKeyboardControl = true;
+    // whether to shoot when seeing the enemy
+    public bool shootWheneverSeeingTheEnemy = true;
     // used to control which mode / behavior type the agent takes
     private string agentMode = "default";
-    // sensors allocated to this agent using SetUpGGBondSensors
-    private List<CopiedISensor> allSensorsAdditionallyAllocated;
     // list of agent modes that are available to this agent as of right now
     private List<ComponentAgent> allAgentModes;
     
@@ -30,16 +30,12 @@ public partial class GGBond : CogsAgent
     
     // ------------------BASIC MONOBEHAVIOR FUNCTIONS-------------------
 
-    // called when enabling the object in the editor;
-    // sets up allSensorsAdditionallyAllocated which will hold the sensors
-    // that are allocated using SetUpGGBondSensors, which will then be 
-    // deallocated correctly with call to OnDisable
+    // called when enabling the object in the editor
     protected override void OnEnable()
     {
         base.OnEnable();
 
         if (GetComponent<BehaviorParameters>().BehaviorType == BehaviorType.HeuristicOnly) {
-            allSensorsAdditionallyAllocated = new List<CopiedISensor>();
             // initialize the agent modes
             initializeAgentModes();
             // if in heuristic mode, call OnEnable for each ComponentAgent enabled right now
@@ -56,8 +52,6 @@ public partial class GGBond : CogsAgent
         if (GetComponent<BehaviorParameters>().BehaviorType == BehaviorType.HeuristicOnly) {
             // if in heuristic mode, call OnDisable for each ComponentAgent enabled right now
             foreach (ComponentAgent ca in allAgentModes) ca.ComponentAgentOnDisable();
-            // clean up sensors
-            CleanupSensors();
         }
     }
     
@@ -69,6 +63,9 @@ public partial class GGBond : CogsAgent
         if (GetComponent<BehaviorParameters>().BehaviorType == BehaviorType.HeuristicOnly) {
             // make a call to the Start method for each ComponentAgent enabled right now
             foreach (ComponentAgent ca in allAgentModes) ca.ComponentAgentStart();
+        } else if (GetComponent<BehaviorParameters>().BehaviorType == BehaviorType.InferenceOnly) {
+            Debug.Log("If you are trying different neural networks in Inference Mode,"
+             + " don't forget to add the right observations inside OtherGGBondCode.cs!");
         }
     }
 
@@ -78,7 +75,18 @@ public partial class GGBond : CogsAgent
         base.FixedUpdate();
         // Determines the agent mode at this time point
         if (GetComponent<BehaviorParameters>().BehaviorType == BehaviorType.HeuristicOnly) {
-            ActionDeterminingLogic();
+            // change mode only if we don't use keyboard control
+            if (!useKeyboardControl) {
+
+                string previousAgentMode = agentMode;
+                ActionDeterminingLogic();
+                // log when a switch in agent mode happens
+                if (agentMode != previousAgentMode) 
+                {
+                    Debug.Log("Switching from " + previousAgentMode + " to " + agentMode + "!");
+                }
+
+            }
         }
         
         LaserControl();
@@ -115,8 +123,102 @@ public partial class GGBond : CogsAgent
     }
 
     // Get relevant information from the environment to effectively learn behavior
+
+    // length of the raycast used to detect walls
+    private const float RAY_DISTANCE = 10f;
     public override void CollectObservations(VectorSensor sensor)
     {
+        // gets angle & distance to the given game object with respect to this object
+        (float yAngle, float distance) getAngleAndDistance(GameObject go) {
+            return (
+                GetYAngle(go), //angle
+                Vector3.Distance(transform.localPosition, go.transform.localPosition) //distance
+                );
+        }
+
+        // CODE TAKEN FROM lab2-self-driving IN CarControlAPI.cs! THANKS!
+        //Takes in an angle as degrees, where 0 is the front and 180,-180 are the back.
+        //Returns a bool indicating whether there was an object within RAY_DISTANCE in the yAngleOffset direction.
+        bool Raycast(float yAngleOffset)
+        {
+            var direction = Quaternion.Euler(0, yAngleOffset, 0) * transform.forward;
+            var position = new Vector3(transform.position.x, transform.position.y + 0.5f, transform.position.z);
+
+            RaycastHit hit;
+            // Does the ray intersect any objects excluding the player layer
+            if (Physics.Raycast(position, direction, out hit, RAY_DISTANCE, 1, QueryTriggerInteraction.Ignore))
+            {
+                // Debug.DrawRay(position, direction * hit.distance, Color.yellow);
+                return (hit.transform.tag == "Wall");
+            }
+            else
+            {
+                // Debug.DrawRay(position, direction * 50, Color.red);
+                return false;
+            }
+        }
+
+        // Agent velocity in x and z axis relative to the agent's forward
+        var localVelocity = transform.InverseTransformDirection(rBody.velocity);
+        sensor.AddObservation(localVelocity.x);
+        sensor.AddObservation(localVelocity.z);
+        
+        // Time remaning
+        sensor.AddObservation(timer.GetComponent<Timer>().GetTimeRemaning());  
+
+        // Agent's current rotation
+        var localRotation = transform.rotation;
+        sensor.AddObservation(localRotation.y);
+
+        // REMOVED AGENT'S ABSOLUTE POSITION!
+        // Home base's position relative to agent
+        var baseLocation = getAngleAndDistance(myBase);
+        sensor.AddObservation(baseLocation.yAngle);
+        sensor.AddObservation(baseLocation.distance);
+    
+        // for each target in the environment, add: its position realtive to the player, 
+        // whether it is being carried by any team, and whether it is in a base of any team
+        foreach (GameObject target in targets){
+            var targetLocation = getAngleAndDistance(target);
+            sensor.AddObservation(targetLocation.yAngle);
+            sensor.AddObservation(targetLocation.distance);
+            sensor.AddObservation(target.GetComponent<Target>().GetCarried()); //indicates the team as int
+            sensor.AddObservation(target.GetComponent<Target>().GetInBase()); //indicates the team as int
+        }
+        
+        // Whether the agent is frozen
+        sensor.AddObservation(IsFrozen());
+
+        // ADDED BY AKIRA: The position of the enemy relative to the player 
+        // as well as its front direction, x, z speed, 
+        // whether it is frozen and whether it is shooting anything
+        // front direction
+        var enemyLocalForward = transform.InverseTransformDirection(enemy.transform.forward);
+        sensor.AddObservation(enemyLocalForward.x);
+        sensor.AddObservation(enemyLocalForward.z);
+        // enemy position
+        var enemyLocation = getAngleAndDistance(enemy);
+        sensor.AddObservation(enemyLocation.yAngle);
+        sensor.AddObservation(enemyLocation.distance);
+        // enemy speed and angle
+        var enemyLocalVelocity = transform.InverseTransformDirection(enemy.GetComponent<Rigidbody>().velocity);
+        sensor.AddObservation(enemyLocalVelocity.x); //x movement relative to this agent
+        sensor.AddObservation(enemyLocalVelocity.z); //z movement relative to this agent
+        // is the enemy frozen?
+        sensor.AddObservation(enemy.GetComponent<CogsAgent>().IsFrozen());
+        // is the enemy shooting and not frozen (a threat)?
+        sensor.AddObservation(enemy.GetComponent<CogsAgent>().IsLaserOn() && !enemy.GetComponent<CogsAgent>().IsFrozen());
+
+        // Raycast to check if there is a wall in any of the eight directions
+        // around the player
+        sensor.AddObservation(Raycast(0));
+        sensor.AddObservation(Raycast(45));
+        sensor.AddObservation(Raycast(90));
+        sensor.AddObservation(Raycast(135));
+        sensor.AddObservation(Raycast(180));
+        sensor.AddObservation(Raycast(-135));
+        sensor.AddObservation(Raycast(-90));
+        sensor.AddObservation(Raycast(-45));
         // DEFAULT OBSERVATIONS CODE STORED AT THE END OF SCRIPT!
     }
 
@@ -128,6 +230,13 @@ public partial class GGBond : CogsAgent
         int shootAxis = (int)actions.DiscreteActions[2];
         int goToTargetAxis = (int)actions.DiscreteActions[3];
         int goToBaseAxis = (int)actions.DiscreteActions[4];
+
+        // if the enemy is right in front and shootWheneverSeeingTheEnemy is true, we shoot
+        if (shootWheneverSeeingTheEnemy && Math.Abs(GetYAngle(enemy)) < 5
+        && Vector3.Distance(transform.localPosition, enemy.transform.localPosition) < LASER_LENGTH)
+        {
+            shootAxis = 1;
+        }
 
         MovePlayer(forwardAxis, rotateAxis, shootAxis, goToTargetAxis, goToBaseAxis);
     }
@@ -192,20 +301,6 @@ public partial class GGBond : CogsAgent
 
 
     //  --------------------------HELPERS---------------------------- 
-
-    // useful in cleaning up sensors that were allocated using SetUpGGBondSensors
-    void CleanupSensors()
-    {
-        // for each sensor added to allSensorsAdditionallyAllocated
-        foreach (CopiedISensor sensor in allSensorsAdditionallyAllocated) 
-        {
-            // Dispose sensor
-            if (sensor is IDisposable disposableSensor)
-            {
-                disposableSensor.Dispose();
-            }
-        }
-    }
 
     // given an NNModel, reinitialize the neural network agent that had this as their neural network
     public void reinitializeNNAgent(NNModel oldModel, NNModel newModel) 

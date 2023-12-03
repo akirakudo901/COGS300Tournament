@@ -16,8 +16,6 @@ public partial class GGBond
     private class Collector : NeuralNetworkAgent 
     {
         new public const string name = "COLLECTOR";
-        // whether to shoot when seeing the enemy
-        public bool shootWheneverSeeingTheEnemy = true;
         // size of vector observation to be taken by this neural network;
         // specified as "Space Size" under "Vector Observation" in the 
         // "Behavior Parameters" component menu
@@ -26,18 +24,9 @@ public partial class GGBond
         // specified as "Stacked Vectors" under "Vector Observation" in the 
         // "Behavior Parameters" component menu
         private const int NUM_STACKED_VECTOR_OBSERVATIONS = 3;
-
-
-        // tracks the number of objects in home base in 
-        // order to add the correct reward when the player
-        // drops targets in the home base
-        private int latestNumTargetInHomeBase = 0;
-        // tracks the number of targets carried by the enemy
-        // to add bonus when an attack is successful on an
-        // enemy player with more objects
-        private int latestNumTargetCarriedByEnemy = 0;
         // length of the raycast used to detect walls
         private const float RAY_DISTANCE = 10f;
+
 
         public Collector(GGBond instance, NNModel model) : base(instance, model) {}
 
@@ -45,9 +34,11 @@ public partial class GGBond
         // initialize a neural network to work with, as well as the observation specs
         public override void ComponentAgentOnEnable()
         {
-            VectorObservationSize = VECTOR_OBSERVATION_SIZE;
-            NumStackedVectorObservations = NUM_STACKED_VECTOR_OBSERVATIONS;
-            SetUpSensors();
+            // call the base's setup
+            base.ComponentAgentOnEnable();
+
+            SetUpSensors(vectorObservationSize : VECTOR_OBSERVATION_SIZE, 
+            numStackedVectorObservations : NUM_STACKED_VECTOR_OBSERVATIONS);
         }
         
         // --------------------AGENT FUNCTIONS-------------------------
@@ -150,13 +141,23 @@ public partial class GGBond
 
         // Returns the name of this agent
         public override string GetName() {return name;}
-        
+
         //  --------------------------HELPERS---------------------------- 
         // ANYTHING?
 
         //######################################################################
         //  --------------------------REWARD RELATED----------------------------
         //######################################################################
+
+        // tracks the number of objects in home base in 
+        // order to add the correct reward when the player
+        // drops targets in the home base
+        private int latestNumTargetInHomeBase = 0;
+        // tracks the number of targets carried by the enemy
+        // to add bonus when an attack is successful on an
+        // enemy player with more objects
+        private int latestNumTargetCarriedByEnemy = 0;
+
 
         // ------------------BASIC MONOBEHAVIOR FUNCTIONS-------------------
         

@@ -72,6 +72,10 @@ namespace CopiedCode
 
         public void Dispose()
         {
+            // AKIRA: had to manually add Dispose as in the usual case, the Academy
+            // instance controls ModelRunners; but in my copied code version,
+            // they exist on their own and only under CopiedBarracudaPolicy
+            if (m_ModelRunner != null) m_ModelRunner.Dispose();
         }
     }
 }

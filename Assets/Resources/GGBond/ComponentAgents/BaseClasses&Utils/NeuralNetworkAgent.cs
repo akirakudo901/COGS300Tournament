@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Barracuda;
@@ -61,11 +62,6 @@ public partial class GGBond
         // constructor to be specified to instantiate an example of this class
         public NeuralNetworkAgent(GGBond instance, NNModel model) : base(instance) {
             this.m_model = model;
-            UpdatePolicy();
-            this.m_info = new CopiedAgentInfo();
-            this.m_info.episodeId = 99; //should not matter whatever number we put here
-            // if there is an NNAgentDecisionRequester attached to instance, remember as so
-            m_nnAgentDecisionRequesterAttached = (instance.GetComponent<NNAgentDecisionRequester>() != null);
         }
 
         // request a decision - essentially meaning that in the next ComponentAgentHeuristic call,
@@ -85,9 +81,25 @@ public partial class GGBond
         // Get relevant information from the environment
         public abstract void GetObservations(CopiedVectorSensor sensor);
 
+        //------------------MONOBEHAVIOUR FUNCTIONS---------------
+        // every inheriting agent has to call SetupSensors appropriately to do some inference
+        public override void ComponentAgentOnEnable() 
+        {
+            UpdatePolicy();
+            this.m_info = new CopiedAgentInfo();
+            this.m_info.episodeId = 99; //should not matter whatever number we put here
+            // if there is an NNAgentDecisionRequester attached to instance, remember as so
+            m_nnAgentDecisionRequesterAttached = (ggbond.GetComponent<NNAgentDecisionRequester>() != null);
+        }
+        
+        // called when the parent agent is disabled
+        public override void ComponentAgentOnDisable()
+        {
+            CleanupSensors();
+            Policy?.Dispose();
+        }
 
-
-        //------------------OVERRIDEN FUNCTIONS---------------
+        //------------------COMPONENTAGENT FUNCTIONS---------------
         // Obtain observations from the environment to be passed to the policy, and
         // determine appropriate actions
         // we can switch between using NNAgentDecisionRequester and not
@@ -138,10 +150,14 @@ public partial class GGBond
         
         // useful for setting up observations with specific shapes, to be passed
         // and initialize in pair with a neural network
-        protected void SetUpSensors() {
+        protected void SetUpSensors(int vectorObservationSize = -1, int numStackedVectorObservations = -1) {
             // CODE HIGHLY BASED ON InitializeSensors() FOUND HERE, THANKS!: 
             // [https://github.com/Unity-Technologies/ml-agents/blob/209d258dabc57af1212f94cf8d1fac9193675690/com.unity.ml-agents/Runtime/Agent.cs#L977]
-            
+
+            if (vectorObservationSize != -1) VectorObservationSize = vectorObservationSize;
+            if (numStackedVectorObservations != -1) NumStackedVectorObservations = numStackedVectorObservations;
+            // if NNAgentSensors had been initialized before, clean up the sensors first
+            if (NNAgentSensors != null) CleanupSensors();
             NNAgentSensors = new List<CopiedISensor>();
             
             // Constructing the RayPerceptionSensorComponent3D sensor that was attached
@@ -167,7 +183,6 @@ public partial class GGBond
             CopiedISensor[] ThreeDSensors = ThreeDRay.CreateSensors();
             NNAgentSensors.Capacity += 1;
             NNAgentSensors.AddRange(ThreeDSensors);
-            ggbond.allSensorsAdditionallyAllocated.AddRange(ThreeDSensors);
             
             // set up the vector sensors
             NNVectorSensor = new CopiedVectorSensor(VectorObservationSize);
@@ -176,16 +191,10 @@ public partial class GGBond
                 CopiedStackingSensor stackedCollectObservationsSensor = new CopiedStackingSensor(
                     NNVectorSensor, NumStackedVectorObservations);
                 NNAgentSensors.Add(stackedCollectObservationsSensor);
-                // then track that sensors have been allocated by adding them to allSensorsAdditionallyAllocated
-                // this allows us to then clean up every sensor by going through allSensorsAdditionallyAllocated
-                // when calling CleanupSensors on a GGBond instance
-                ggbond.allSensorsAdditionallyAllocated.Add(NNVectorSensor);
-                ggbond.allSensorsAdditionallyAllocated.Add(stackedCollectObservationsSensor);
             }
             else
             {
                 NNAgentSensors.Add(NNVectorSensor);
-                ggbond.allSensorsAdditionallyAllocated.Add(NNVectorSensor);
             }
 
             // Sort the Sensors by name to ensure determinism
@@ -193,9 +202,26 @@ public partial class GGBond
             NNAgentSensors.Sort((x, y) => string.Compare(x.GetName(), y.GetName(), System.StringComparison.InvariantCulture));
         }
 
+        // cleans up sensors that were allocated on this agent mode
+        void CleanupSensors()
+        {
+            // for each sensor added to NNAgentSensors
+            foreach (CopiedISensor sensor in NNAgentSensors) 
+            {
+                
+                // Dispose sensor
+                if (sensor is IDisposable disposableSensor)
+                {
+                    disposableSensor.Dispose();
+                }
+            }
+            NNAgentSensors = null;
+        }
+
         // updates the content of all sensors attached to this NNAgent
         void UpdateSensors()
         {
+            if (NNAgentSensors == null) return;
             foreach (var sensor in NNAgentSensors)
             {
                 sensor.Update();
