@@ -14,7 +14,8 @@ using Unity.MLAgents.Actuators;
 * 
 * Once you do those steps, you can go to GGBond.cs and do the following changes 
 * (also specified in GGBond's top):
-* 1. Go to the OnEnable function and add a new instance of your class to the list 'allAgentModes'
+* 1. Go to the InitializeAgentModes function and add a new instance of your class to the list 
+*    'allAgentModes'.
 * 2. Go to ActionDeterminingLogic and specify your logic to switch between agent modes, referring
 *    to your own agent by the name you gave it in step 3. of TemplateAgent.cs's first steps!
 * 3. Don't forget to set the agent mode to InferenceOnly.

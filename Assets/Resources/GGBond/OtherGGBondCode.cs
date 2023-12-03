@@ -37,7 +37,7 @@ public partial class GGBond : CogsAgent
 
         if (GetComponent<BehaviorParameters>().BehaviorType == BehaviorType.HeuristicOnly) {
             // initialize the agent modes
-            initializeAgentModes();
+            InitializeAgentModes();
             // if in heuristic mode, call OnEnable for each ComponentAgent enabled right now
             foreach (ComponentAgent ca in allAgentModes) ca.ComponentAgentOnEnable();
         }

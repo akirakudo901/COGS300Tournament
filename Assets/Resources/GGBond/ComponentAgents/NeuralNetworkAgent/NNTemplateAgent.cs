@@ -1,49 +1,75 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Barracuda;
 using UnityEngine;
+using Unity.Barracuda;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 
 // my code
 using CopiedCode;
 
-// This file implements a "harasser" agent.
+// ################# HOW TO MAKE YOUR OWN NEURAL NETWORK AGENT #################
+/**
+* This file shows you how to implement an agent acting based on a neural network!
+* I would advise you copy and use this as template!
+* 1. Rename the class name to your own class name, e.g. MyNNAgent.
+* 2. Rename the constructor (the method named NNTemplateAgent) to your name in 1, e.g MyNNAgent.
+* 3. Set a name for your agent which will be used to refer to your agent in GGBond's ActionDeterminingLogic.
+*    e.g. NN_TEMPLATE_AGENT, MY_NN_AGENT, etc.
+* 4. Change the entries for VECTOR_OBSERVATION_SIZE and NUM_STACKED_VECTOR_OBSERVATIONS as specified below.
+* 5. Setup the function GetObservation, so that it matches the CollectObservation function you
+*    used to train your neural network.
+* 
+* Once you do those steps, you can go to GGBond.cs and do the following changes 
+* (also specified in GGBond's top):
+* 1. Go at the top to find how to set up a new field & inspector window to add your neural network model.
+* 2. Go to the InitializeAgentModes function and add a new instance of your class to the list 'allAgentModes',
+*    utilizing your newly set field.
+* 3. Go to the Unity editor and slot your model into the newly created inspector under GGBond script!
+*
+*  BELOW WILL BE THE SAME AS WITH SETTING UP HEURISTIC AGENTS! 
+* 4. Go to ActionDeterminingLogic and specify your logic to switch between agent modes, referring
+*    to your own agent by the name you gave it in step 3. of NNTemplateAgent.cs's first steps!
+* 5. Don't forget to set the agent mode to InferenceOnly.
+* 6. Try and see if it works!
+* Definitely let me know if there are bugs / things you wanna double check.
+**/
+
 public partial class GGBond
 {
 
-    private class Harasser : NeuralNetworkAgent 
+    private class NNTemplateAgent : NeuralNetworkAgent 
     {
-        new public const string name = "HARASSER";
+
+        // ------------------THINGS YOU WILL WANT TO CHANGE-------------------
+
+        // CHANGE THIS TO YOUR NAME OF CHOICE!
+        new public const string name = "NN_TEMPLATE_AGENT";
+        
+        // CHANGE THIS!
         // size of vector observation to be taken by this neural network;
         // specified as "Space Size" under "Vector Observation" in the 
         // "Behavior Parameters" component menu
         private const int VECTOR_OBSERVATION_SIZE = 59;
+        // CHANGE THIS AS WELL!
         // number of vector observation to stack;
         // specified as "Stacked Vectors" under "Vector Observation" in the 
         // "Behavior Parameters" component menu
         private const int NUM_STACKED_VECTOR_OBSERVATIONS = 3;
-        // length of the raycast used to detect walls
-        private const float RAY_DISTANCE = 10f;
-
-
-        public Harasser(GGBond instance, NNModel model) : base(instance, model) {}
-
-        // ------------------BASIC MONOBEHAVIOR FUNCTIONS-------------------
-        // initialize a neural network to work with, as well as the observation specs
-        public override void ComponentAgentOnEnable()
-        {
-            base.ComponentAgentOnEnable();
-            
-            SetUpSensors(vectorObservationSize : VECTOR_OBSERVATION_SIZE, 
-            numStackedVectorObservations : NUM_STACKED_VECTOR_OBSERVATIONS);
-        }
-        
-        // --------------------AGENT FUNCTIONS-------------------------
 
         // Get relevant information from the environment
         public override void GetObservations(CopiedVectorSensor sensor)
         {
+            // ################################
+            // !!!!!!!   TO BE CHNAGED   !!!!!!
+            // ################################
+
+            // SET UP THE OBSERVATIONS SUCH THAT THEY MATCH THE OBSERVATIONS 
+            // THAT WERE PASSED WHEN YOUR NEURAL NETWORK WAS TRAINED!
+
+            // AS AN EXAMPLE, THE OBSERVATION BELOW WILL CAPTURE A LOT OF INFORMATION,
+            // FOR A TOTAL OF 59 VECTOR ENTRIES.
+            
             // gets angle & distance to the given game object with respect to this object
             (float yAngle, float distance) getAngleAndDistance(GameObject go) {
                 return (
@@ -137,9 +163,31 @@ public partial class GGBond
             sensor.AddObservation(Raycast(-45));
         }
 
+
+
+
+
+
+        // ------------------THINGS YOU MIGHT NOT NEED TO TOUCH-------------------
+
+        public NNTemplateAgent(GGBond instance, NNModel model) : base(instance, model) {}
+
+        // ------------------BASIC MONOBEHAVIOR FUNCTIONS-------------------
+        // initialize a neural network to work with, as well as the observation specs
+        public override void ComponentAgentOnEnable()
+        {
+            // call the base's setup - leave it here as it is important!
+            base.ComponentAgentOnEnable();
+            // sets up the sensors, optionally as specified from the given two integers
+            SetUpSensors(vectorObservationSize : VECTOR_OBSERVATION_SIZE, 
+            numStackedVectorObservations : NUM_STACKED_VECTOR_OBSERVATIONS);
+        }
+        
+        // --------------------AGENT FUNCTIONS-------------------------
+
+
         // Returns the name of this agent
         public override string GetName() {return name;}
-
+    
     }
-
 }
