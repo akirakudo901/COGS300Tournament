@@ -13,13 +13,13 @@ GameObject:
   - component: {fileID: 4275725191425983405}
   - component: {fileID: 4275725191425983406}
   - component: {fileID: 4275725191425983407}
+  - component: {fileID: 298677078523564372}
   - component: {fileID: 4275725191425983408}
   - component: {fileID: 4275725191425983409}
   - component: {fileID: 4275725191425983410}
   - component: {fileID: 4275725191425983411}
-  - component: {fileID: 1253534523030137374}
   m_Layer: 0
-  m_Name: GGBond
+  m_Name: GGBondV2
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -36,9 +36,8 @@ Transform:
   m_LocalPosition: {x: 25, y: 0.5, z: 25}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 8139203731968605159}
   - {fileID: 4275725191823420598}
-  - {fileID: 2183993613354802164}
-  - {fileID: 3045678700065146579}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: -125, z: 0}
@@ -120,6 +119,28 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 84
   m_CollisionDetection: 1
+--- !u!114 &298677078523564372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4275725191425983413}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39942a9fe3ce0a24f91f1415f695ac12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 0
+  UseKeyboardControl: 1
+  ShootWheneverSeeingTheEnemy: 1
+  NotShootOutsideOfSeeingTheEnemy: 0
+  m_collectorModel: {fileID: 0}
+  m_harasserModel: {fileID: 0}
+  enemyHomeBase: {fileID: 0}
 --- !u!114 &4275725191425983408
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -210,28 +231,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DecisionPeriod: 5
   TakeActionsBetweenDecisions: 1
---- !u!114 &1253534523030137374
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4275725191425983413}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eba6f2d405d4e304fb7b16050f1659fd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  agentParameters:
-    maxStep: 0
-  hasUpgradedFromAgentParameters: 1
-  MaxStep: 0
-  UseKeyboardControl: 1
-  ShootWheneverSeeingTheEnemy: 1
-  NotShootOutsideOfSeeingTheEnemy: 0
-  m_collectorModel: {fileID: 0}
-  m_harasserModel: {fileID: 0}
-  enemyHomeBase: {fileID: 0}
 --- !u!1 &4275725191576875384
 GameObject:
   m_ObjectHideFlags: 0
@@ -424,99 +423,9 @@ Transform:
   - {fileID: 4275725191576875383}
   - {fileID: 4275725191799670264}
   m_Father: {fileID: 4275725191425983412}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1857070620018310175
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 4275725191425983412}
-    m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.99999976
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0.99999976
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.6
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -0.33
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 1.07
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: -0.9998599
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0.016742347
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 358.081
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_Name
-      value: newestggbond
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 16eef6c5c0499c74e90a7b5e9e7ab524, type: 3}
---- !u!4 &2183993613354802164 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 16eef6c5c0499c74e90a7b5e9e7ab524,
-    type: 3}
-  m_PrefabInstance: {fileID: 1857070620018310175}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &3300810706636906808
+--- !u!1001 &8610596437345491980
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -526,12 +435,12 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 63a174eeb4696044885f8da37ce6e760,
         type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 63a174eeb4696044885f8da37ce6e760,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.58
+      value: -0.532
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 63a174eeb4696044885f8da37ce6e760,
         type: 3}
@@ -541,7 +450,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 63a174eeb4696044885f8da37ce6e760,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.07
+      value: 1.199
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 63a174eeb4696044885f8da37ce6e760,
         type: 3}
@@ -583,16 +492,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: madGGBond
       objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 63a174eeb4696044885f8da37ce6e760,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 63a174eeb4696044885f8da37ce6e760, type: 3}
---- !u!4 &3045678700065146579 stripped
+--- !u!4 &8139203731968605159 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 63a174eeb4696044885f8da37ce6e760,
     type: 3}
-  m_PrefabInstance: {fileID: 3300810706636906808}
+  m_PrefabInstance: {fileID: 8610596437345491980}
   m_PrefabAsset: {fileID: 0}

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // This file implements the "HeuristicAgent" class which forms the basis of any agent that uses heuristics
-public partial class GGBond
+namespace ComponentAgents
 {
     // nested abstarct class as template for agents who don't rely on neural networks
-    abstract class HeuristicAgent : ComponentAgent {
+    public abstract class HeuristicAgent : ComponentAgent {
         new public const string name = "HEURISTIC_AGENT";
 
         // constructor to be specified to instantiate an example of this class

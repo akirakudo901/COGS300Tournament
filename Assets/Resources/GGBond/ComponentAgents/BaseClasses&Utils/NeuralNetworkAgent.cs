@@ -13,11 +13,11 @@ using CopiedCode;
 using GGBondUtilities;
 
 // This file implements the "NeuralNetworkAgent" class which forms the basis of any agent that uses neural networks
-public partial class GGBond
+namespace ComponentAgents
 {
     
     // nested abstarct class as template for agents who leverages neural networks
-    abstract class NeuralNetworkAgent : ComponentAgent {
+    public abstract class NeuralNetworkAgent : ComponentAgent {
 
         new public const string name = "NEURAL_NETWORK_AGENT";
         
@@ -47,6 +47,9 @@ public partial class GGBond
         public List<CopiedISensor> NNAgentSensors;
         // vector sensor used for observation
         public CopiedVectorSensor NNVectorSensor;
+        // whether this agent was trained using the RayPerceptionSensorComponent3D which was
+        // originally attached to the agent object that was part of resource
+        public bool TrainedUsingDefaultRayPerceptionSensorComponent3D = true;
         // agent info stored - really there just to make the remaining code work
         private CopiedAgentInfo m_info;
         // whether a decision has been requested
@@ -160,29 +163,31 @@ public partial class GGBond
             if (NNAgentSensors != null) CleanupSensors();
             NNAgentSensors = new List<CopiedISensor>();
             
-            // Constructing the RayPerceptionSensorComponent3D sensor that was attached
-            // to my agent as it trained. I believe the sensor came by default.
-            // THERE ARE SOME ASSUMPTIONS I MAKE IN THE WAY THESE AGENTS WERE TRAINED;
-            // FOR EXAMPLE, THIS PART OF THE CODE WILL LIKELY CAUSE AN ERROR IF THE 
-            // NEURAL NETWORK WAS TRAINED USING SETTING UseChildSensors AS TRUE, or
-            // ObservableAttribute AS *NOT* IGNORE.
-            CopiedRayPerceptionSensorComponent3D ThreeDRay = ggbond.gameObject.AddComponent(typeof(CopiedRayPerceptionSensorComponent3D)) as CopiedRayPerceptionSensorComponent3D;
-            
-            // the following values were taken from the inspector menu
-            ThreeDRay.SensorName = "RayPerceptionSensor";
-            ThreeDRay.DetectableTags = new List<string>() {"Player", "Wall", "Target", "HomeBase"};
-            ThreeDRay.RaysPerDirection = 5;
-            ThreeDRay.MaxRayDegrees = 180;
-            ThreeDRay.SphereCastRadius = 0.5f;
-            ThreeDRay.RayLength = 62f;
-            ThreeDRay.RayLayerMask = LayerMask.GetMask("Default", "TransparentFX", "Water", "UI");
-            ThreeDRay.ObservationStacks = 3;
-            ThreeDRay.StartVerticalOffset = 0f;
-            ThreeDRay.EndVerticalOffset = 0f;
+            if (TrainedUsingDefaultRayPerceptionSensorComponent3D) {
+                // Constructing the RayPerceptionSensorComponent3D sensor that was attached
+                // to my agent as it trained. I believe the sensor came by default.
+                // THERE ARE SOME ASSUMPTIONS I MAKE IN THE WAY THESE AGENTS WERE TRAINED;
+                // FOR EXAMPLE, THIS PART OF THE CODE WILL LIKELY CAUSE AN ERROR IF THE 
+                // NEURAL NETWORK WAS TRAINED USING SETTING UseChildSensors AS TRUE, or
+                // ObservableAttribute AS *NOT* IGNORE.
+                CopiedRayPerceptionSensorComponent3D ThreeDRay = ggbond.gameObject.AddComponent(typeof(CopiedRayPerceptionSensorComponent3D)) as CopiedRayPerceptionSensorComponent3D;
+                
+                // the following values were taken from the inspector menu
+                ThreeDRay.SensorName = "RayPerceptionSensor";
+                ThreeDRay.DetectableTags = new List<string>() {"Player", "Wall", "Target", "HomeBase"};
+                ThreeDRay.RaysPerDirection = 5;
+                ThreeDRay.MaxRayDegrees = 180;
+                ThreeDRay.SphereCastRadius = 0.5f;
+                ThreeDRay.RayLength = 62f;
+                ThreeDRay.RayLayerMask = LayerMask.GetMask("Default", "TransparentFX", "Water", "UI");
+                ThreeDRay.ObservationStacks = 3;
+                ThreeDRay.StartVerticalOffset = 0f;
+                ThreeDRay.EndVerticalOffset = 0f;
 
-            CopiedISensor[] ThreeDSensors = ThreeDRay.CreateSensors();
-            NNAgentSensors.Capacity += 1;
-            NNAgentSensors.AddRange(ThreeDSensors);
+                CopiedISensor[] ThreeDSensors = ThreeDRay.CreateSensors();
+                NNAgentSensors.Capacity += 1;
+                NNAgentSensors.AddRange(ThreeDSensors);
+            }
             
             // set up the vector sensors
             NNVectorSensor = new CopiedVectorSensor(VectorObservationSize);
@@ -200,6 +205,7 @@ public partial class GGBond
             // Sort the Sensors by name to ensure determinism
             // Taken from SensorUtils under ISensor under MLAgents>Runtime>Sensors.
             NNAgentSensors.Sort((x, y) => string.Compare(x.GetName(), y.GetName(), System.StringComparison.InvariantCulture));
+
         }
 
         // cleans up sensors that were allocated on this agent mode

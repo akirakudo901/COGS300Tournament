@@ -9,10 +9,10 @@ using Unity.MLAgents.Actuators;
 using CopiedCode;
 
 // This file implements a "harasser" agent.
-public partial class GGBond
+namespace ComponentAgents
 {
 
-    private class Harasser : NeuralNetworkAgent 
+    public class Harasser : NeuralNetworkAgent 
     {
         new public const string name = "HARASSER";
         // size of vector observation to be taken by this neural network;
@@ -75,12 +75,12 @@ public partial class GGBond
             }
 
             // Agent velocity in x and z axis relative to the agent's forward
-            var localVelocity = ggbond.transform.InverseTransformDirection(ggbond.rBody.velocity);
+            var localVelocity = ggbond.transform.InverseTransformDirection(ggbond.GetComponent<Rigidbody>().velocity);
             sensor.AddObservation(localVelocity.x);
             sensor.AddObservation(localVelocity.z);
             
             // Time remaning
-            sensor.AddObservation(ggbond.timer.GetComponent<Timer>().GetTimeRemaning());  
+            sensor.AddObservation(ggbond.GetTimer().GetComponent<Timer>().GetTimeRemaning());  
 
             // Agent's current rotation
             var localRotation = ggbond.transform.rotation;
@@ -88,13 +88,13 @@ public partial class GGBond
 
             // REMOVED AGENT'S ABSOLUTE POSITION!
             // Home base's position relative to agent
-            var baseLocation = getAngleAndDistance(ggbond.myBase);
+            var baseLocation = getAngleAndDistance(ggbond.GetMyBase());
             sensor.AddObservation(baseLocation.yAngle);
             sensor.AddObservation(baseLocation.distance);
         
             // for each target in the environment, add: its position realtive to the player, 
             // whether it is being carried by any team, and whether it is in a base of any team
-            foreach (GameObject target in ggbond.targets){
+            foreach (GameObject target in ggbond.GetTargetsInEnvironment()){
                 var targetLocation = getAngleAndDistance(target);
                 sensor.AddObservation(targetLocation.yAngle);
                 sensor.AddObservation(targetLocation.distance);
@@ -109,21 +109,21 @@ public partial class GGBond
             // as well as its front direction, x, z speed, 
             // whether it is frozen and whether it is shooting anything
             // front direction
-            var enemyLocalForward = ggbond.transform.InverseTransformDirection(ggbond.enemy.transform.forward);
+            var enemyLocalForward = ggbond.transform.InverseTransformDirection(ggbond.GetEnemy().transform.forward);
             sensor.AddObservation(enemyLocalForward.x);
             sensor.AddObservation(enemyLocalForward.z);
             // enemy position
-            var enemyLocation = getAngleAndDistance(ggbond.enemy);
+            var enemyLocation = getAngleAndDistance(ggbond.GetEnemy());
             sensor.AddObservation(enemyLocation.yAngle);
             sensor.AddObservation(enemyLocation.distance);
             // enemy speed and angle
-            var enemyLocalVelocity = ggbond.transform.InverseTransformDirection(ggbond.enemy.GetComponent<Rigidbody>().velocity);
+            var enemyLocalVelocity = ggbond.transform.InverseTransformDirection(ggbond.GetEnemy().GetComponent<Rigidbody>().velocity);
             sensor.AddObservation(enemyLocalVelocity.x); //x movement relative to this agent
             sensor.AddObservation(enemyLocalVelocity.z); //z movement relative to this agent
             // is the enemy frozen?
-            sensor.AddObservation(ggbond.enemy.GetComponent<CogsAgent>().IsFrozen());
+            sensor.AddObservation(ggbond.GetEnemy().GetComponent<CogsAgent>().IsFrozen());
             // is the enemy shooting and not frozen (a threat)?
-            sensor.AddObservation(ggbond.enemy.GetComponent<CogsAgent>().IsLaserOn() && !ggbond.enemy.GetComponent<CogsAgent>().IsFrozen());
+            sensor.AddObservation(ggbond.GetEnemy().GetComponent<CogsAgent>().IsLaserOn() && !ggbond.GetEnemy().GetComponent<CogsAgent>().IsFrozen());
 
             // Raycast to check if there is a wall in any of the eight directions
             // around the player

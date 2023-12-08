@@ -11,7 +11,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/AgentTesting.unity
     guid: 92c1b3ba3afb5fe459f60f7c5bf04fd4
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Tournament.unity
     guid: bafdb6aebdbea8c48a31a4326af119f8
+  - enabled: 1
+    path: Assets/Scenes/AgentTraining.unity
+    guid: 06d83f0f4688e9a48879c5bee3694509
   m_configObjects: {}

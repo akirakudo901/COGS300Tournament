@@ -66,4 +66,4 @@ config
 #results from training using ml-agents
 results
 # results from trained NNs
-/Assets/Resources/GGBond/Trained_NNs
+/Assets/Resources/Trained_NNs

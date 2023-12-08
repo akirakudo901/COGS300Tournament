@@ -5,10 +5,10 @@ using Unity.MLAgents.Actuators;
 
 // This file implements an abstract "ComponentAgent" class which forms the basis of any 'component' agent
 // to the overarching player agent
-public partial class GGBond
+namespace ComponentAgents
 {
     // nested abstarct class as template for agents
-    abstract class ComponentAgent {
+    public abstract class ComponentAgent {
 
         public const string name = "COMPONENT_AGENT"; 
         protected GGBond ggbond;

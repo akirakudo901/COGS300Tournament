@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Barracuda;
@@ -7,6 +7,9 @@ using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
 using Unity.MLAgents.Sensors;
+
+// my code
+using ComponentAgents;
 
 // TODO ADD AN EXPLANATION OF WHAT THIS AGENT IS ABOUT!
 
@@ -44,72 +47,29 @@ using Unity.MLAgents.Sensors;
 * Definitely let me know if there are bugs / things you wanna double check.
 **/
 
-public partial class GGBond : CogsAgent
-{
-    // ################################################################
-    // USE THIS AS TEMPLATE TO INSTANTIATE YOUR OWN MODEL, TO WHICH YOU 
-    // COULD THEN ASSIGN A MODEL FROM THE INSPECTOR!
-    // 1. COPY & PASTE THIS TO MAKE A NEW ENTRY.
-    // 2. SET THE PRIVATE FIELD NAME TO YOUR CHOICE, e.g. m_MyNNAgentModel
-    // 3. CHANGE THE ENTRIES WITHIN THE PUBLIC PROPERTY TO MATCH YOUR NEW
-    //    PRIVATE FIELD NAME.
-    // 4. SET THE NAME OF YOUR PUBLIC PROPERTY TO YOUR CHOICE, e.g. MyNNAgentModel
-    // Then, go down to InitializeAgentModes (also as specified at the top of this
-    //    document) and instantiate your Agent example, passing to it MyNNAgentModel
-    //    as the nn model.
-    [SerializeField]
-    private NNModel m_nnTemplateModel;
-
-    public NNModel NNTemplateModel
-    {
-        get {return m_nnTemplateModel;} // getter method; CHANGE PRIVATE FIELD NAME!
-        set { reinitializeNNAgent(m_nnTemplateModel, value); m_nnTemplateModel = value; }  // set method; CHANGE PRIVATE FIELD NAME!
-    }
-    // ################################################################
-
-
-
-
-    // model for collector agent
-    [SerializeField]
-    private NNModel m_collectorModel;
-    public NNModel CollectorModel 
-    {
-        get {return m_collectorModel;} // getter method
-        set { reinitializeNNAgent(m_collectorModel, value); m_collectorModel = value; }  // set method
-    }
-    // model for harasser agent
-    [SerializeField]
-    private NNModel m_harasserModel;
-
-    public NNModel HarasserModel 
-    {
-        get {return m_harasserModel;} // getter method
-        set { reinitializeNNAgent(m_harasserModel, value); m_harasserModel = value; }  // set method
-    }
-    
+public partial class GGBondV2 : GGBond
+{   
     // --------------------AGENT FUNCTIONS-------------------------
 
     // This function handles the main logic behind which behavior type the 
     // agent takes at any single time. It will specify states which 
     // Heuristic use to take the associated actions.
-    public void ActionDeterminingLogic() {
+    public override void ActionDeterminingLogic() {
         // start with COLLECTOR mode
         // as soon as our score surpasses the enemy's, turn to harass 
-        if (myBase.GetComponent<HomeBase>().GetCaptured() > GetEnemyCaptured())
+        if (myBase.GetComponent<HomeBase>().GetCaptured() > GetEnemyCaptured() ||
+        myBase.GetComponent<HomeBase>().GetCaptured() >= 4)
         {
             agentMode = "HARASSER";
-        }
-        else if (timer.GetComponent<Timer>().GetTimeRemaning() < 115)
+        } 
+        else 
         {
-            agentMode = "COLLECTOR";
-        } else {
             // this is the default agent mode
-            agentMode = "default";
+            agentMode = "COLLECTOR";
         }
     }
 
-    public void InitializeAgentModes() 
+    public override void InitializeAgentModes() 
     {
         //###################################################
         // SPECIFY WHICH AGENT MODES YOU WANT TO USE HERE!
@@ -121,10 +81,10 @@ public partial class GGBond : CogsAgent
         // If you are making a neural network agent, additionally pass the model
         // you want it to use as second parameter!
         allAgentModes = new List<ComponentAgent>();
-        allAgentModes.Add(new TemplateAgent(this));
-        allAgentModes.Add(new Collector(this, CollectorModel));
-        allAgentModes.Add(new Harasser(this, HarasserModel));
-        allAgentModes.Add(new NNTemplateAgent(this, NNTemplateModel));
+        // allAgentModes.Add(new Collector(this, CollectorModel));
+        // allAgentModes.Add(new Harasser(this, HarasserModel));
+        // allAgentModes.Add(new HarasserHeuristic(this));
+        allAgentModes.Add(new ClassicGrabOneGoBack(this));
         //###################################################
     }
 
@@ -143,14 +103,4 @@ public partial class GGBond : CogsAgent
 
 
     // ------------------HELPER USEFUL FOR ACTION DETERMINING LOGIC-----------
-    [HideInInspector]
-    public HomeBase enemyHomeBase;
-    public int GetEnemyCaptured() {
-        if (enemyHomeBase == null) {
-            enemyHomeBase = Array.Find(GameObject.FindGameObjectsWithTag("HomeBase"), 
-            (hb => hb.GetComponent<HomeBase>().team == enemy.GetComponent<CogsAgent>().GetTeam())
-            ).GetComponent<HomeBase>();
-        } 
-        return enemyHomeBase.GetCaptured();
-    }
 }
