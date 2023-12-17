@@ -166,7 +166,7 @@ public partial class GGBond : CogsAgent
     // if it is a NeuralNetworkAgent
     public void RequestActionToNNAgent() {
         // only valid when BehaviorType is not InferenceOnly
-        if (GetComponent<BehaviorParameters>().BehaviorType != BehaviorType.InferenceOnly) return;
+        if (GetComponent<BehaviorParameters>().BehaviorType == BehaviorType.InferenceOnly) return;
 
         ComponentAgent currentAgentMode = allAgentModes.Find(x => x.GetName() == agentMode);
         if (currentAgentMode is NeuralNetworkAgent) {
@@ -179,7 +179,7 @@ public partial class GGBond : CogsAgent
     // if it is a NeuralNetworkAgent
     public void RequestDecisionToNNAgent() {
         // only valid when BehaviorType is not InferenceOnly
-        if (GetComponent<BehaviorParameters>().BehaviorType != BehaviorType.InferenceOnly) return;
+        if (GetComponent<BehaviorParameters>().BehaviorType == BehaviorType.InferenceOnly) return;
 
         ComponentAgent currentAgentMode = allAgentModes.Find(x => x.GetName() == agentMode);
         if (currentAgentMode is NeuralNetworkAgent) {
